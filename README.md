@@ -36,7 +36,7 @@ Vous pouvez copier:
 cp .env.example .env
 ```
 
-Puis exporter les variables locales (si vous ne chargez pas .env automatiquement):
+Puis exporter les variables locales ( si vous ne chargez pas .env automatiquement ):
 
 ```bash
 export PORT=3000
