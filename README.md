@@ -1,5 +1,7 @@
 # Application Full Stack Production-Ready - TP3
 
+[![CI](https://github.com/COMTETethan/Ynov_CI_CD_TP3/actions/workflows/ci.yml/badge.svg)](https://github.com/COMTETethan/Ynov_CI_CD_TP3/actions/workflows/ci.yml)
+
 ## Description
 
 API REST Node.js (Hono) pour la gestion de taches.
