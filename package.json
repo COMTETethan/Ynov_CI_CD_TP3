@@ -11,16 +11,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/COMTETethan/Ynov_CI_CD_TP2.git"
+    "url": "git+https://github.com/COMTETethan/Ynov_CI_CD_TP3.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/COMTETethan/Ynov_CI_CD_TP2/issues"
+    "url": "https://github.com/COMTETethan/Ynov_CI_CD_TP3/issues"
   },
-  "homepage": "https://github.com/COMTETethan/Ynov_CI_CD_TP2#readme",
+  "homepage": "https://github.com/COMTETethan/Ynov_CI_CD_TP3#readme",
   "dependencies": {
     "@hono/node-server": "^1.19.11",
     "hono": "^4.12.8"

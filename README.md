@@ -207,6 +207,34 @@ Notes:
 - .env est ignore via .gitignore.
 - Si Trivy remonte des CVE critiques, mettez a jour les tags image et rebuild.
 
+## Pipeline CI/CD complet (Partie 5)
+
+Workflow ajoute:
+- .github/workflows/ci.yml
+
+Comportement:
+- Trigger sur push main et pull_request main
+- Job test:
+	- npm ci
+	- npm run lint
+	- npm run test:coverage
+	- upload de l'artifact coverage/
+- Job build-and-push:
+	- depends_on test (needs)
+	- execute uniquement sur push main
+	- login GHCR avec GITHUB_TOKEN
+	- build + push image Docker vers ghcr.io
+	- cache Buildx (cache-from/cache-to type=gha)
+	- scan Trivy CRITICAL,HIGH
+	- echec du pipeline si vulnerabilite detectee (exit-code 1)
+
+Image publiee:
+- ghcr.io/<owner>/<repo>:latest
+- ghcr.io/<owner>/<repo>:sha-<commit>
+
+Prerequis GitHub:
+- Settings -> Actions -> General -> Workflow permissions -> Read and write permissions
+
 ## Qualite
 
 ```bash
