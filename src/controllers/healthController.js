@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { checkDatabaseHealth, isDatabaseConfigured } from "../db.js";
 import { checkRedisHealth, isRedisConfigured } from "../cache.js";
 
@@ -6,6 +7,10 @@ export async function getHealth(c) {
     status: "healthy",
     timestamp: new Date().toISOString(),
   };
+
+  if (process.env.APP_VERSION) {
+    health.version = process.env.APP_VERSION;
+  }
 
   if (!isDatabaseConfigured()) {
     health.database = "not_configured";

@@ -125,7 +125,6 @@ Image mesuree:
 
 ## Orchestration Docker Compose (Partie 3)
 
-Partie 3 livree avec:
 - docker-compose.yml (api + db + redis + nginx)
 - healthcheck PostgreSQL avec pg_isready
 - depends_on avec condition service_healthy
@@ -133,11 +132,6 @@ Partie 3 livree avec:
 - variables via .env
 - reverse proxy Nginx
 - restart: unless-stopped
-
-Fichiers:
-- docker-compose.yml
-- nginx/default.conf
-- .env.example
 
 Lancer en une commande:
 
@@ -177,7 +171,7 @@ Checklist couverte:
 - Scan Trivy local (bloquant sur CRITICAL)
 - .env ignore par git
 
-Verifier non-root:
+Verifier non root:
 
 ```bash
 docker build -t tp3-api:secure .
@@ -211,9 +205,6 @@ Notes:
 
 ## Pipeline CI/CD complet (Partie 5)
 
-Workflow ajoute:
-- .github/workflows/ci.yml
-
 Comportement:
 - Trigger sur push main et pull_request main
 - Job test:
@@ -236,6 +227,69 @@ Image publiee:
 
 Prerequis GitHub:
 - Settings -> Actions -> General -> Workflow permissions -> Read and write permissions
+
+## Simulation Blue/Green Deploy (Partie 6)
+
+Architecture Blue/Green:
+- api-blue: environnement actif (traffic client)
+- api-green: environnement standby (nouvelle version)
+- nginx: route vers blue par defaut
+- endpoint de test standby: /test-standby/
+
+Versions exposees dans /health:
+- api-blue -> APP_VERSION=1.0.0-blue
+- api-green -> APP_VERSION=2.0.0-green
+
+Lancer la simulation:
+
+```bash
+cp .env.example .env
+docker build -t tp3-api:secure .
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Verifier environnement actif (Blue):
+
+```bash
+curl http://localhost/health
+```
+
+Verifier standby (Green) avant bascule:
+
+```bash
+curl http://localhost/test-standby/health
+```
+
+Bascule Blue -> Green:
+
+1. Editer nginx/blue-green.conf
+2. Dans upstream active_backend, remplacer api-blue par api-green
+3. Recharger Nginx sans interruption:
+
+```bash
+docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+```
+
+Verifier apres bascule:
+
+```bash
+curl http://localhost/health
+```
+
+Rollback Green -> Blue:
+
+1. Remettre api-blue dans active_backend
+2. Recharger Nginx:
+
+```bash
+docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+```
+
+Arret de la stack Blue/Green:
+
+```bash
+docker compose -f docker-compose.prod.yml down
+```
 
 ## Qualite
 
