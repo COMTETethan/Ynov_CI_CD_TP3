@@ -23,17 +23,14 @@
   "homepage": "https://github.com/COMTETethan/Ynov_CI_CD_TP2#readme",
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "@hono/swagger-ui": "^0.6.1",
-    "eslint": "^10.0.3",
-    "hono": "^4.12.8",
-    "pg": "^8.20.0",
-    "redis": "^5.11.0",
-    "supertest": "^7.2.2",
-    "vitest": "^4.1.0",
-    "zod": "^4.3.6"
+    "hono": "^4.12.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@vitest/coverage-istanbul": "^4.1.0"
+    "@vitest/coverage-istanbul": "^4.1.0",
+    "eslint": "^10.2.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.4",
+    "zod": "^4.3.6"
   }
 }

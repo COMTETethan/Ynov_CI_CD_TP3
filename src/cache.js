@@ -1,37 +1,49 @@
 /* eslint-disable no-undef */
-import { createClient } from "redis";
+import net from "node:net";
 
-let client;
+export function isRedisConfigured() {
+  return Boolean(process.env.REDIS_URL);
+}
 
-export function getRedisClient() {
-  if (!process.env.REDIS_URL) {
+function getRedisHostAndPort() {
+  try {
+    const redisUrl = new URL(process.env.REDIS_URL);
+    return {
+      host: redisUrl.hostname,
+      port: Number.parseInt(redisUrl.port || "6379", 10),
+    };
+  } catch {
     return null;
   }
+}
 
-  if (!client) {
-    client = createClient({
-      url: process.env.REDIS_URL,
-    });
-  }
+function checkTcpConnection(host, port, timeoutMs = 1500) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
 
-  return client;
+    const cleanup = (result) => {
+      socket.destroy();
+      resolve(result);
+    };
+
+    socket.setTimeout(timeoutMs);
+    socket.once("connect", () => cleanup(true));
+    socket.once("timeout", () => cleanup(false));
+    socket.once("error", () => cleanup(false));
+    socket.connect(port, host);
+  });
 }
 
 export async function checkRedisHealth() {
-  const redisClient = getRedisClient();
-
-  if (!redisClient) {
+  if (!isRedisConfigured()) {
     return false;
   }
 
-  try {
-    if (!redisClient.isOpen) {
-      await redisClient.connect();
-    }
+  const target = getRedisHostAndPort();
 
-    await redisClient.ping();
-    return true;
-  } catch {
+  if (!target) {
     return false;
   }
+
+  return checkTcpConnection(target.host, target.port);
 }
