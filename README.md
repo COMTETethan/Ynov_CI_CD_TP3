@@ -22,7 +22,7 @@ Sans variables d'environnement, il retournera:
 - database: not_configured
 - cache: not_configured
 
-Variables a definir:
+Variables a definir pour un run local direct (sans Docker Compose):
 
 ```bash
 PORT=3000
@@ -36,12 +36,20 @@ Vous pouvez copier:
 cp .env.example .env
 ```
 
-Puis exporter les variables (si vous ne chargez pas .env automatiquement):
+Puis exporter les variables locales (si vous ne chargez pas .env automatiquement):
 
 ```bash
 export PORT=3000
 export DATABASE_URL=postgres://taskuser:taskpassword@localhost:5432/taskdb
 export REDIS_URL=redis://localhost:6379
+```
+
+Configuration pour Docker Compose (Partie 3):
+
+```bash
+POSTGRES_USER=taskuser
+POSTGRES_PASSWORD=taskpassword
+POSTGRES_DB=taskdb
 ```
 
 ## Lancement en local
@@ -112,6 +120,51 @@ curl http://localhost:3000/health
 
 Image mesuree:
 - tp3-api:sub100 -> 94.7MB
+
+## Orchestration Docker Compose (Partie 3)
+
+Partie 3 livree avec:
+- docker-compose.yml (api + db + redis + nginx)
+- healthcheck PostgreSQL avec pg_isready
+- depends_on avec condition service_healthy
+- volume persistant pgdata
+- variables via .env
+- reverse proxy Nginx
+- restart: unless-stopped
+
+Fichiers:
+- docker-compose.yml
+- nginx/default.conf
+- .env.example
+
+Lancer en une commande:
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Tester:
+
+```bash
+curl http://localhost/health
+```
+
+Swagger via Nginx:
+
+```bash
+http://localhost/docs
+```
+
+Arreter les services:
+
+```bash
+docker compose down
+```
+
+Si vous avez l'erreur "docker: unknown command: docker compose":
+- installez le plugin Compose v2 (package docker-compose-plugin)
+- ou utilisez un Docker Desktop qui inclut Compose
 
 ## Qualite
 
