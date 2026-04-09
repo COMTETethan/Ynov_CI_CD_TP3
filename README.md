@@ -166,6 +166,47 @@ Si vous avez l'erreur "docker: unknown command: docker compose":
 - installez le plugin Compose v2 (package docker-compose-plugin)
 - ou utilisez un Docker Desktop qui inclut Compose
 
+## Securisation image (Partie 4)
+
+Checklist couverte:
+- Image ne tourne pas en root (USER appuser)
+- Pas de secrets hardcodes dans Dockerfile
+- Versions epinglees (pas de :latest)
+- Scan Trivy local (bloquant sur CRITICAL)
+- .env ignore par git
+
+Verifier non-root:
+
+```bash
+docker build -t tp3-api:secure .
+docker run --rm tp3-api:secure whoami
+```
+
+Attendu:
+
+```bash
+appuser
+```
+
+Scanner les vulnerabilites (CRITICAL + HIGH):
+
+```bash
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+	aquasec/trivy:0.65.0 image --severity CRITICAL,HIGH tp3-api:secure
+```
+
+Mode bloquant sur CRITICAL:
+
+```bash
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+	aquasec/trivy:0.65.0 image --severity CRITICAL --exit-code 1 tp3-api:secure
+```
+
+Notes:
+- Dockerfile utilise un build multi-stage, base alpine, user non-root.
+- .env est ignore via .gitignore.
+- Si Trivy remonte des CVE critiques, mettez a jour les tags image et rebuild.
+
 ## Qualite
 
 ```bash

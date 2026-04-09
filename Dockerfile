@@ -1,5 +1,5 @@
 # ========== STAGE 1: Build ==========
-FROM node:20-alpine AS builder
+FROM node:20.12-alpine3.19 AS builder
 WORKDIR /app
 
 # Install dependencies first to maximize Docker layer cache hits.
