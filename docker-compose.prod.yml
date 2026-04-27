@@ -1,5 +1,9 @@
 services:
   api-blue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
     image: tp3-api:secure
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -15,6 +19,10 @@ services:
     restart: unless-stopped
 
   api-green:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
     image: tp3-api:secure
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}

@@ -28,7 +28,7 @@ Variables a definir pour un run local direct (sans Docker Compose):
 
 ```bash
 PORT=3000
-DATABASE_URL=postgres://taskuser:taskpassword@localhost:5432/taskdb
+DATABASE_URL=postgres://taskuser:taskpassword@localhost:5432/taskdbs
 REDIS_URL=redis://localhost:6379
 ```
 
@@ -42,7 +42,7 @@ Puis exporter les variables locales ( si vous ne chargez pas .env automatiquemen
 
 ```bash
 export PORT=3000
-export DATABASE_URL=postgres://taskuser:taskpassword@localhost:5432/taskdb
+export DATABASE_URL=postgres://taskuser:taskpassword@localhost:5432/taskdbs
 export REDIS_URL=redis://localhost:6379
 ```
 
@@ -51,7 +51,7 @@ Configuration pour Docker Compose (Partie 3):
 ```bash
 POSTGRES_USER=taskuser
 POSTGRES_PASSWORD=taskpassword
-POSTGRES_DB=taskdb
+POSTGRES_DB=taskdbs
 ```
 
 ## Lancement en local
@@ -86,7 +86,7 @@ docker network create tp3-net
 docker run -d --name tp3-db --network tp3-net \
 	-e POSTGRES_USER=taskuser \
 	-e POSTGRES_PASSWORD=taskpassword \
-	-e POSTGRES_DB=taskdb \
+	-e POSTGRES_DB=taskdbs \
 	postgres:16-alpine
 ```
 
@@ -100,7 +100,7 @@ docker run -d --name tp3-redis --network tp3-net redis:7-alpine
 
 ```bash
 docker run -d --name tp3-api --network tp3-net -p 3000:3000 \
-	-e DATABASE_URL=postgres://taskuser:taskpassword@tp3-db:5432/taskdb \
+	-e DATABASE_URL=postgres://taskuser:taskpassword@tp3-db:5432/taskdbs \
 	-e REDIS_URL=redis://tp3-redis:6379 \
 	tp3-api:latest
 ```
@@ -114,7 +114,8 @@ curl http://localhost:3000/health
 ## Dockerfile optimise (Partie 2)
 
 - Multi-stage build
-- Base Alpine
+- Target `runtime` pour le lancement Compose standard
+- Target `production` pour l'image Alpine plus legere
 - Utilisateur non-root
 - Layer caching sur package.json/package-lock.json
 - Healthcheck
@@ -140,6 +141,8 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
+Le `docker-compose.yml` build le target `runtime`.
+
 Tester:
 
 ```bash
@@ -158,6 +161,13 @@ Arreter les services:
 docker compose down
 ```
 
+Si vous avez change `POSTGRES_DB` apres un premier lancement, recreez le volume PostgreSQL:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
 Si vous avez l'erreur "docker: unknown command: docker compose":
 - installez le plugin Compose v2 (package docker-compose-plugin)
 - ou utilisez un Docker Desktop qui inclut Compose
@@ -174,7 +184,7 @@ Checklist couverte:
 Verifier non root:
 
 ```bash
-docker build -t tp3-api:secure .
+docker build --target production -t tp3-api:secure .
 docker run --rm tp3-api:secure whoami
 ```
 
@@ -199,7 +209,9 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
 ```
 
 Notes:
-- Dockerfile utilise un build multi-stage, base alpine, user non-root.
+- Dockerfile propose deux targets d'execution:
+  - `runtime`: utilise `node:20-alpine`, pratique pour `docker compose up --build`
+  - `production`: part de `alpine:3.20`, installe Node.js, et sert pour l'image `tp3-api:secure`
 - .env est ignore via .gitignore.
 - Si Trivy remonte des CVE critiques, mettez a jour les tags image et rebuild.
 
@@ -244,9 +256,10 @@ Lancer la simulation:
 
 ```bash
 cp .env.example .env
-docker build -t tp3-api:secure .
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+Le `docker-compose.prod.yml` build le target `production`.
 
 Verifier environnement actif (Blue):
 
@@ -289,6 +302,13 @@ Arret de la stack Blue/Green:
 
 ```bash
 docker compose -f docker-compose.prod.yml down
+```
+
+Si le nom de base PostgreSQL a change depuis un ancien lancement:
+
+```bash
+docker compose -f docker-compose.prod.yml down -v
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## Qualite
