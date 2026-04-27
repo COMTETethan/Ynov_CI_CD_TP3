@@ -1,37 +1,67 @@
 /* eslint-disable no-undef */
-import net from "node:net";
+import { Pool } from "pg";
+
+const CREATE_TASKS_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`;
+
+let pool = null;
+let initializationPromise = null;
+
+export class DatabaseNotConfiguredError extends Error {
+  constructor() {
+    super("Database is not configured");
+    this.name = "DatabaseNotConfiguredError";
+  }
+}
 
 export function isDatabaseConfigured() {
   return Boolean(process.env.DATABASE_URL);
 }
 
-function getDatabaseHostAndPort() {
-  try {
-    const databaseUrl = new URL(process.env.DATABASE_URL);
-    return {
-      host: databaseUrl.hostname,
-      port: Number.parseInt(databaseUrl.port || "5432", 10),
-    };
-  } catch {
-    return null;
+function getPool() {
+  if (!isDatabaseConfigured()) {
+    throw new DatabaseNotConfiguredError();
   }
+
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+  }
+
+  return pool;
 }
 
-function checkTcpConnection(host, port, timeoutMs = 1500) {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
+async function createSchema() {
+  await getPool().query(CREATE_TASKS_TABLE_SQL);
+}
 
-    const cleanup = (result) => {
-      socket.destroy();
-      resolve(result);
-    };
+export async function initializeDatabase() {
+  if (!isDatabaseConfigured()) {
+    throw new DatabaseNotConfiguredError();
+  }
 
-    socket.setTimeout(timeoutMs);
-    socket.once("connect", () => cleanup(true));
-    socket.once("timeout", () => cleanup(false));
-    socket.once("error", () => cleanup(false));
-    socket.connect(port, host);
-  });
+  if (!initializationPromise) {
+    initializationPromise = createSchema().catch((error) => {
+      initializationPromise = null;
+      throw error;
+    });
+  }
+
+  return initializationPromise;
+}
+
+export async function query(sql, params = []) {
+  await initializeDatabase();
+  return getPool().query(sql, params);
 }
 
 export async function checkDatabaseHealth() {
@@ -39,11 +69,22 @@ export async function checkDatabaseHealth() {
     return false;
   }
 
-  const target = getDatabaseHostAndPort();
-
-  if (!target) {
+  try {
+    await getPool().query("SELECT 1");
+    return true;
+  } catch {
     return false;
   }
+}
 
-  return checkTcpConnection(target.host, target.port);
+export async function closeDatabasePool() {
+  initializationPromise = null;
+
+  if (!pool) {
+    return;
+  }
+
+  const activePool = pool;
+  pool = null;
+  await activePool.end();
 }

@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import app from "../src/app.js";
+import { closeDatabasePool } from "../src/db.js";
 import { resetTasksStore } from "../src/data/tasks.js";
 
-beforeEach(() => {
-  resetTasksStore();
+beforeEach(async () => {
+  await resetTasksStore();
+});
+
+afterAll(async () => {
+  await closeDatabasePool();
 });
 
 describe("TP3 Task API", () => {

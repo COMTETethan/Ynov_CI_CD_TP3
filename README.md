@@ -5,6 +5,7 @@
 ## Description
 
 API REST Node.js (Hono) pour la gestion de taches.
+Les routes `/api/tasks` sont maintenant stockees en PostgreSQL pour survivre aux redemarrages du serveur.
 
 Endpoints inclus:
 - GET /health
@@ -23,6 +24,8 @@ Sans variables d'environnement, il retournera:
 - status: unhealthy
 - database: not_configured
 - cache: not_configured
+
+Les routes CRUD des taches utilisent PostgreSQL quand `DATABASE_URL` est configure.
 
 Variables a definir pour un run local direct (sans Docker Compose):
 
@@ -220,6 +223,7 @@ Notes:
 Comportement:
 - Trigger sur push main et pull_request main
 - Job test:
+	- service PostgreSQL lance avant les tests
 	- npm ci
 	- npm run lint
 	- npm run test:coverage

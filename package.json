@@ -23,7 +23,8 @@
   "homepage": "https://github.com/COMTETethan/Ynov_CI_CD_TP3#readme",
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "hono": "^4.12.8"
+    "hono": "^4.12.8",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
